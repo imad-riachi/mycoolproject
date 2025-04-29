@@ -1,0 +1,144 @@
+name: Deploy to Production (Vercel)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10 # Specify pnpm version or remove for latest
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      # Pull Vercel project settings early
+      - name: Pull Vercel Project Settings
+        run: |
+          npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
+          echo "Checking for .vercel/project.json:"
+          ls -a .vercel/
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Ensure necessary environment variables are available for migration if needed
+      - name: Run database migrations
+        run: pnpm run db:migrate
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          
+      # Set environment variables in Vercel using GitHub secrets
+      - name: Set Vercel Environment Variables
+        run: |
+          # Direct Vercel CLI commands to set environment variables
+          echo "Setting Vercel environment variables..."
+          
+          # Create a temporary directory for environment values
+          mkdir -p .vercel_tmp
+          
+          # Set POSTGRES_URL
+          echo "Setting POSTGRES_URL..."
+          echo "$POSTGRES_URL" > .vercel_tmp/POSTGRES_URL
+          npx vercel env rm POSTGRES_URL production -y --token "$VERCEL_TOKEN" || true
+          npx vercel env add POSTGRES_URL production < .vercel_tmp/POSTGRES_URL --token "$VERCEL_TOKEN"
+          
+          # Set STRIPE_SECRET_KEY
+          echo "Setting STRIPE_SECRET_KEY..."
+          echo "$STRIPE_SECRET_KEY" > .vercel_tmp/STRIPE_SECRET_KEY
+          npx vercel env rm STRIPE_SECRET_KEY production -y --token "$VERCEL_TOKEN" || true
+          npx vercel env add STRIPE_SECRET_KEY production < .vercel_tmp/STRIPE_SECRET_KEY --token "$VERCEL_TOKEN"
+          
+          # Set STRIPE_WEBHOOK_SECRET
+          echo "Setting STRIPE_WEBHOOK_SECRET..."
+          echo "$STRIPE_WEBHOOK_SECRET" > .vercel_tmp/STRIPE_WEBHOOK_SECRET
+          npx vercel env rm STRIPE_WEBHOOK_SECRET production -y --token "$VERCEL_TOKEN" || true
+          npx vercel env add STRIPE_WEBHOOK_SECRET production < .vercel_tmp/STRIPE_WEBHOOK_SECRET --token "$VERCEL_TOKEN"
+          
+          # Set AUTH_SECRET
+          echo "Setting AUTH_SECRET..."
+          echo "$AUTH_SECRET" > .vercel_tmp/AUTH_SECRET
+          npx vercel env rm AUTH_SECRET production -y --token "$VERCEL_TOKEN" || true
+          npx vercel env add AUTH_SECRET production < .vercel_tmp/AUTH_SECRET --token "$VERCEL_TOKEN"
+          
+          # Set BASE_URL
+          echo "Setting BASE_URL..."
+          echo "$BASE_URL" > .vercel_tmp/BASE_URL
+          npx vercel env rm BASE_URL production -y --token "$VERCEL_TOKEN" || true
+          npx vercel env add BASE_URL production < .vercel_tmp/BASE_URL --token "$VERCEL_TOKEN"
+          
+          # Set POSTHOG variables if they exist
+          if [ ! -z "$POSTHOG_API_KEY" ]; then
+            echo "Setting POSTHOG_API_KEY..."
+            echo "$POSTHOG_API_KEY" > .vercel_tmp/POSTHOG_API_KEY
+            npx vercel env rm POSTHOG_API_KEY production -y --token "$VERCEL_TOKEN" || true
+            npx vercel env add POSTHOG_API_KEY production < .vercel_tmp/POSTHOG_API_KEY --token "$VERCEL_TOKEN"
+          fi
+          
+          if [ ! -z "$POSTHOG_HOST" ]; then
+            echo "Setting POSTHOG_HOST..."
+            echo "$POSTHOG_HOST" > .vercel_tmp/POSTHOG_HOST
+            npx vercel env rm POSTHOG_HOST production -y --token "$VERCEL_TOKEN" || true
+            npx vercel env add POSTHOG_HOST production < .vercel_tmp/POSTHOG_HOST --token "$VERCEL_TOKEN"
+          fi
+          
+          # Clean up
+          rm -rf .vercel_tmp
+        env:
+          # Vercel authentication
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          # Application secrets to be deployed to Vercel
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+
+      # Build the project using Vercel CLI
+      - name: Build project
+        run: npx vercel build --prod --token $VERCEL_TOKEN
+        env:
+          # Ensure all build-time secrets are here
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          # Vercel secrets needed for build command context
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+
+      # Deploy the prebuilt output
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prebuilt --prod --token $VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
