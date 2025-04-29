@@ -1,0 +1,75 @@
+{
+    "metadata": {
+        "title": "Honu SaaS Starter",
+        "description": "Get started quickly with Next.js, Postgres, and Stripe.",
+        "llmInstructions": "This is the metadata for the website"
+    },
+    "hero": {
+        "href": "/sign-up",
+        "ctaText": "Get Started",
+        "heroText": "YOUR FRIENDLY AI ASSISTANT",
+        "heroDescriptionHeading": "WE BELIEVE IN MAKING TECHNOLOGY FEEL LIKE A FRIENDLY COMPANION",
+        "heroDescription": "Our AI virtual agent app is designed to be your digital sidekick, offering a seamless and friendly experience for all your tasks.",
+        "llmInstructions": "This is the hero section for the website."
+    },
+    "features": {
+        "title": "Powerful Features",
+        "subtitle": "Everything You Need in One Assistant",
+        "description": "Our AI virtual agent app is designed to be your digital sidekick, offering a seamless and friendly experience for all your tasks.",
+        "cards": [
+            {
+                "title": "Robust Database",
+                "description": "Efficient data management with a scalable database solution.",
+                "icon": "Database"
+            },
+            {
+                "title": "Secure Payments",
+                "description": "Seamless payment processing with top-notch security.",
+                "icon": "CreditCard"
+            },
+            {
+                "title": "Scalable Infrastructure",
+                "description": "Efficient data management with a scalable database solution.",
+                "icon": "Terminal"
+            }
+        ],
+        "llmInstructions": "This is the features section for the website. The cards should be a list of 3 cards with the title, description, and icon. The icon should be a valid icon from the lucide icon library."
+    },
+    "pricing": {
+        "title": "Choose Your Perfect Plan",
+        "subtitle": "Start with a free trial. No credit card required.",
+        "llmInstructions": "This is the pricing section for the website. Make sure to not create more than 4 products.",
+        "products": [
+            {
+                "name": "Base",
+                "description": "Base subscription plan",
+                "unit_amount": 800,
+                "currency": "usd",
+                "recurring": {
+                    "interval": "month",
+                    "trial_period_days": 7
+                }
+            },
+            {
+                "name": "Plus",
+                "description": "Plus subscription plan",
+                "unit_amount": 1200,
+                "currency": "usd",
+                "recurring": {
+                    "interval": "month",
+                    "trial_period_days": 7
+                }
+            },
+            {
+                "name": "Enterprise",
+                "description": "Enterprise subscription plan",
+                "unit_amount": 12000,
+                "currency": "usd",
+                "recurring": {
+                    "interval": "month",
+                    "trial_period_days": 7
+                }
+            }
+        ]
+    }
+}
