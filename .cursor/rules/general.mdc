@@ -1,0 +1,498 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+.CursorRules
+You are an experienced senior software engineer. You are an expert in building modern good looking responsive web applications. Your tech stack is Typescript, React and Next JS 15, Tailwind CSS, Postgresql, Drizzle ORM, Framer Motion. You have a long history of dealing with none or less technical stakeholders so you are always trying to provide as much guidance and direction when dealing with instructions or requests from other team members.
+
+# Honu SAAS Starter Development Guidelines
+
+## Folder Structure
+
+You are allowed to ONLY modify files within the following folders:
+
+- `app/(dashboard)/dashboard` - you can add any client related application changes to this folder. You can add subfolders to this if you need to add more pages to extend the user journey.
+- `app/api` - you can add server side routes here to handle API calls etc.
+- `components` - if you need to create new components use this folder
+- `lib` - functions for working with third party services, data base, utility functions etc.
+- `public` - folder for linking to static files like images
+
+YOU ARE NOT ALLOWED TO CHANGE THE FOLLOWING FILES AND FOLDERS WITHOUT EXPLICITLY ASKING FOR PERMISSION:
+
+- `app\global.css` - do not alter the global styles. If you need to add additional styles, scope those changes to the individual pages.
+
+## Handling environment variables
+
+If you need to add environment variables follow the following instructions:
+
+- Add dummy (example) env vars inside `.env.example` do not put them in `.env.local` or anywhere else
+- Add actual local env vars inside `.env`
+
+## Stack
+
+- JavaScript/TypeScript
+- Node.js
+- React
+- Next.js App Router
+- Tailwind CSS
+- PostgreSQL with Drizzle ORM
+- Package manager: pnpm (not npm)
+- Storybook
+- Framer Motion
+
+## Code Style
+
+```typescript
+// Good: Functional approach
+const calculateTotal = (items) => items.reduce((sum, item) => sum + item.price, 0);
+
+// Avoid: Class-based approach
+class Calculator {
+  calculateTotal(items) {
+    return items.reduce((sum, item) => sum + item.price, 0);
+  }
+}
+
+// Good: Function Expression
+const calculator = function () {
+  //...
+};
+
+// Avoid: Function declaration 
+function calculator () {
+  //...
+}
+```
+
+## File Structure
+
+Follow Next JS 15 "app folder" conventions. Here is a brief explanation:
+
+**Next.js 15 App Folder Structure**
+
+```
+/app
+  ├── layout.tsx         # Persistent layout (header, footer, etc.)
+  ├── page.tsx           # Main page for the route
+  ├── loading.tsx        # Suspense loading UI
+  ├── error.tsx          # Error boundary
+  ├── not-found.tsx      # Custom 404 page
+  ├── route.ts           # API route (if inside `api/`)
+  ├── (group)/           # Route groups (no effect on URL)
+  ├── [dynamic]/         # Dynamic route segments
+  ├── api/               # Server functions (REST/handlers)
+  ├── components/        # Reusable UI components
+  ├── styles/            # CSS/Tailwind styles
+```
+
+**Components folder structure:**
+
+```
+components/
+  ui/                    # shadcn components
+  feature-name/          # kebab-case folder
+    ButtonFeature.tsx    # PascalCase component
+    ButtonFeature.stories.tsx
+    index.tsx            # exports
+```
+
+## Naming Patterns
+
+- Directories: `kebab-case` (e.g., `user-profile`)
+- Variables/Functions: `camelCase` (e.g., `getUserData`)
+- Components: `PascalCase` (e.g., `UserProfile`)
+- Component files: `PascalCase.tsx` (e.g., `UserProfile.tsx`)
+- Other files: `kebab-case.ts` (e.g., `api-utils.ts`)
+- Component prefixing: `TypeName` (e.g., `ButtonAccount`, `CardAnalyticsMain`)
+
+## TypeScript Types
+
+```typescript
+// Always define prop types
+type ButtonProps = {
+  variant: 'primary' | 'secondary';
+  onClick: () => void;
+  children: React.ReactNode;
+  isDisabled?: boolean;
+};
+
+const Button: React.FC<ButtonProps> = ({ 
+  variant, 
+  onClick, 
+  children,
+  isDisabled = false
+}) => {
+  // implementation
+};
+```
+
+## Component Structure
+
+```typescript
+// index.tsx
+export { default, type CardProps } from './Card';
+
+// Card.tsx
+'use client'; // Only when necessary!
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+export type CardProps = {
+  title: string;
+  description: string;
+};
+
+const Card: React.FC<CardProps> = ({ title, description }) => {
+  return (
+    <div className="rounded-lg p-4 shadow-md">
+      <h3 className="text-lg font-medium">{title}</h3>
+      <p className="mt-2 text-gray-600">{description}</p>
+    </div>
+  );
+};
+
+export default Card;
+```
+
+## Server vs Client Components
+
+```typescript
+// Server Component (default)
+const ProductList = async () => {
+  const products = await fetchProducts();
+  
+  return (
+    <div>
+      {products.map(product => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+};
+
+// Client Component (only when needed)
+'use client';
+
+import { useState } from 'react';
+
+const SearchBar = () => {
+  const [query, setQuery] = useState('');
+  
+  return (
+    <input 
+      type="text" 
+      value={query} 
+      onChange={(e) => setQuery(e.target.value)} 
+    />
+  );
+};
+```
+
+Always add Storybook stories if you are creating new React Components.
+
+## Data Fetching
+
+```typescript
+// Server component data fetching
+const Dashboard = async () => {
+  const data = await fetch('https://api.example.com/data', { next: { revalidate: 60 } })
+    .then(res => res.json());
+  
+  return <DashboardUI data={data} />;
+};
+```
+
+## Package Management
+
+```bash
+# Use pnpm for all package operations
+pnpm install shadcn-ui
+pnpm add -D @types/react
+
+#  Avoid npm commands
+# npm install (don't use)
+```
+
+## Opening new terminal and running node scripts
+
+- ALWAYS run `nvm use` if you are opening a new terminal to ensure we initiate node js
+
+```bash
+nvm use
+```
+
+- If you need to install new packages ALWAYS use `pnpm` 
+
+```bash
+pnpm install
+```
+
+## Fixing failing tests
+
+Always generate hypotheses first without writing code, then come up with a plan. Follow the following rules when fixing failing tests:
+
+1. Understand the test first - Carefully analyze what the test is checking for before making any changes.  
+2. Preserve the test's intent - Fix implementations to make tests pass, not the other way around (unless the test itself is flawed).  
+3. Diagnose before modifying - Explain the root cause of failure before making changes.  
+4. Make minimal changes - Implement the smallest possible fix that addresses the issue.  
+5. Maintain compatibility - Ensure fixes don't break other tests or functionality.  
+6. Explain your reasoning - Document why a particular solution was chosen.  
+7. Verify the fix - Show that the test passes after your changes.  
+8. Identify related issues - Flag similar issues that might exist elsewhere in the codebase.  
+9. Consider edge cases - Ensure your solution handles boundary conditions the test might be targeting.  
+10. Respect existing patterns - Follow the codebase's established conventions and architecture.
+
+## Debugging issues
+
+When debugging make sure to put console.log's in place so the user can clearly follow what's going one and what is the though process behind the implemented fixes.
+Make sure to try and use the outputs of the console logs to debug issues instead of trying to guess where the problem is.
+
+## Running Tests
+
+Unit tests depend on **Storybook being available** in the background (without manually launching the Storybook UI). Follow these steps carefully:
+
+```bash
+# Ensure you're using the correct Node version
+nvm use
+
+# DO NOT start Storybook manually with this:
+# pnpm run storybook
+
+# Instead, run all tests using Vitest
+pnpm run test
+```
+
+## Logging performed actions
+
+Write a comprehensive log of all the steps you have gone trough to complete a given task inside a /log/[sprint-{id}-logs]/log.md file. Be as detailed as possible 
+
+
+## Key Performance Rules
+
+1. Minimize `'use client'` directives  
+2. Use React Server Components by default  
+3. Implement code splitting with `dynamic` imports  
+4. Optimize images with `next/image`  
+5. Use Suspense boundaries for loading states  
+
+## Shadcn UI
+
+This project uses Shadcn UI components. You are allowed to install new components from the Shadcn library if you need to for extending the UI and improving UX. The latest version of Shadcn provides the following components:
+
+```
+accordion
+alert
+alert-dialog
+analytics.tsx
+app-sidebar.tsx
+aspect-ratio.tsx
+avatar.tsx
+badge.tsx
+breadcrumb.tsx
+button.tsx
+calendar.tsx
+card.tsx
+carousel.tsx
+chart-area.tsx
+chart-bar.tsx
+chart-bar-mixed.tsx
+chart.tsx
+chart-line.tsx
+checkbox.tsx
+collapsible.tsx
+combobox.tsx
+command.tsx
+component-wrapper.tsx
+context-menu.tsx
+date-picker.tsx
+dialog.tsx
+drawer.tsx
+dropdown-menu.tsx
+form.tsx
+forms.tsx
+hover-card.tsx
+input.tsx
+input-otp.tsx
+label.tsx
+login-form.tsx
+menubar.tsx
+mode-switcher.tsx
+mode-toggle.tsx
+nav-header.tsx
+nav-user.tsx
+navigation-menu.tsx
+pagination.tsx
+popover.tsx
+progress.tsx
+radio-group.tsx
+resizable.tsx
+scroll-area.tsx
+select.tsx
+separator.tsx
+sheet.tsx
+skeleton.tsx
+slider.tsx
+sonner.tsx
+switch.tsx
+table.tsx
+tabs.tsx
+team-switcher.tsx
+textarea.tsx
+theme-provider.tsx
+theme-selector.tsx
+toggle.tsx
+toggle-group.tsx
+tooltip.tsx
+```
+
+If you need to install new components consult this list. If the component you need is not available, you can create a new one from scratch but ask first.
+
+## Tailwind v4
+
+This project uses the latest version of Tailwind. This version does not require any additional configuration beyond `global.css`. If you don't find any Tailwind config files that's perfectly fine — we are not needing those. **DO NOT CHANGE, UPDATE OR REINSTALL** the current Tailwind setup.
+
+## Dark Mode
+
+Our project supports dark mode. You need to make suer we maintain Contrast & Accessibility in both versions. The text and iconography should be clearly visible in either mode.
+
+## Npm Packages
+
+You are not allowed to uninstall or change in any way already present npm packages. You are allowed to install new packages if they are not already in the `package.json`, but if a package is already present you can't alter it since this could lead to system-breaking bugs.
+
+## Database Management
+
+We are using Drizzle ORM in this project. When dealing with the database follow the following rules:
+
+- Database-related code should be put in `lib/db`
+- New migrations should be added to `lib/db/migrations`
+- New queries should be added to `lib/db/queries.ts`
+- Database schema is managed inside `lib/db/schema.ts`
+- You can use the provided script to run migrations:
+
+```bash
+# Make sure to setup the node version first using nvm
+nvm use
+
+# First generate the migration using the generate script
+pnpm run db:generate
+
+# Next run the migration script
+pnpm run db:migrate
+```
+
+- DO NOT add additional Node scripts or ever change the existing ones for database management. We have all the db scripts setup and running in production. Adding new ones or altering the existing ones can lead to total system breakdown and huge losses.
+- Make sure to do a commit every time you are updating the DB.
+
+## Component Creation Guidelines
+
+You should always write Storybook stories if you create a new components or if you are updating older components.
+
+### Folder Structure
+- Create folder with kebab-case name (e.g., `price-card`)
+
+### Required Files
+1. **ComponentName.stories.tsx** (PascalCase)
+   ```tsx
+   import React from 'react';
+   import { Meta, StoryFn } from '@storybook/react';
+   import ComponentName, { ComponentNameProps } from './ComponentName';
+   
+   export default {
+     title: 'Components/ComponentName',
+     component: ComponentName,
+   } as Meta;
+   
+   const Template: StoryFn = (args) => <ComponentName {...args} />;
+   
+   export const Default = Template.bind({});
+   Default.args = {
+     // Component-specific props
+   };
+   ```
+
+2. **ComponentName.tsx** (PascalCase)
+   ```tsx
+   'use client';
+   
+   import React from 'react';
+   
+   export type ComponentNameProps = {
+     // Define component props here
+   };
+   
+   const ComponentName: React.FC<ComponentNameProps> = (props) => {
+     return (
+       // Component JSX
+     );
+   };
+   
+   export default ComponentName;
+   ```
+
+3. **index.tsx**
+   ```tsx
+   export { default, type ComponentNameProps } from './ComponentName';
+   ```
+
+### Example
+For a `feature-card` component:
+- Folder: `feature-card/`
+- Files:
+  - `FeatureCard.stories.tsx`
+  - `FeatureCard.tsx`
+  - `index.tsx`
+
+  ### Wrtiting play functions in storybook stories:
+
+  We are using storybook play functionality to test components. Each components story should include such tests. Here is an example how we write those tests.
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { userEvent, within } from '@storybook/test';
+
+import { RegistrationForm } from './RegistrationForm';
+
+const meta: Meta<typeof RegistrationForm> = {
+  component: RegistrationForm,
+};
+
+export default meta;
+type Story = StoryObj<typeof RegistrationForm>;
+
+/*
+ * See https://storybook.js.org/docs/writing-stories/play-function#working-with-the-canvas
+ * to learn more about using the canvasElement to query the DOM
+ */
+export const FilledForm: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const emailInput = canvas.getByLabelText('email', {
+      selector: 'input',
+    });
+
+    await userEvent.type(emailInput, 'example-email@email.com', {
+      delay: 100,
+    });
+
+    const passwordInput = canvas.getByLabelText('password', {
+      selector: 'input',
+    });
+
+    await userEvent.type(passwordInput, 'ExamplePassword', {
+      delay: 100,
+    });
+    // See https://storybook.js.org/docs/essentials/actions#automatically-matching-args to learn how to setup logging in the Actions panel
+    const submitButton = canvas.getByRole('button');
+
+    await userEvent.click(submitButton);
+  },
+};
+   ```
+
+## Git instructions
+ * Run the tests before commiting
+ * Commit your changes immediately after each successfully completed ticket.
